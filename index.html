@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Expert desktop: Jordan Brooks</title>
+<style>
+  :root {
+    --paper: #F3F5F7;
+    --surface: #FFFFFF;
+    --ink: #1C2430;
+    --muted: #5B6675;
+    --line: #DDE2E8;
+    --accent: #0F6E6A;
+    --accent-soft: #E3F1F0;
+    --warn: #A8530B;
+    --warn-soft: #FCEFE2;
+    --bad: #B42318;
+    --bad-soft: #FDECEA;
+    --good: #2E7D4F;
+    --good-soft: #E7F4EC;
+    --rail: #E8ECF0;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #12171D;
+      --surface: #1B222B;
+      --ink: #E6EAEF;
+      --muted: #9AA5B3;
+      --line: #2C3540;
+      --accent: #4FB3AC;
+      --accent-soft: #173533;
+      --warn: #E8A15C;
+      --warn-soft: #3A2A1A;
+      --bad: #F08A80;
+      --bad-soft: #3A1E1C;
+      --good: #6CC593;
+      --good-soft: #193227;
+      --rail: #161C23;
+      color-scheme: dark;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--ink);
+    background: var(--paper);
+  }
+  .app { display: grid; grid-template-columns: 64px 1fr; min-height: 100vh; }
+
+  /* Left rail */
+  .rail { background: var(--rail); border-right: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; padding: 16px 0; gap: 18px; }
+  .rail a { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); text-decoration: none; padding: 6px 4px; border-radius: 8px; width: 52px; }
+  .rail a[aria-current="page"] { color: var(--accent); background: var(--accent-soft); }
+  .rail svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+  .rail a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Main column */
+  .main { display: flex; flex-direction: column; min-width: 0; overflow: auto; }
+  .caller { background: var(--surface); border-bottom: 1px solid var(--line); padding: 14px 28px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 32px; }
+  .caller h1 { font-size: 22px; font-weight: 650; letter-spacing: -0.01em; margin: 0; }
+  .verified { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--good); background: var(--good-soft); padding: 2px 10px; border-radius: 999px; margin-left: 10px; vertical-align: 3px; }
+  .caller dl { display: flex; gap: 28px; margin: 0; }
+  .caller dt { font-size: 12px; color: var(--muted); }
+  .caller dd { margin: 0; font-weight: 550; }
+
+  .context { display: flex; flex-wrap: wrap; gap: 0; border-bottom: 1px solid var(--line); background: var(--paper); padding: 0 28px; }
+  .context div { padding: 10px 24px 10px 0; margin-right: 24px; border-right: 1px solid var(--line); }
+  .context div:last-child { border-right: 0; }
+  .context span { display: block; font-size: 12px; color: var(--muted); }
+  .context strong { font-weight: 600; }
+  .timer { font-variant-numeric: tabular-nums; }
+
+  .content { padding: 24px 28px 40px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-content: start; }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; }
+  .panel h2 { font-size: 15px; font-weight: 650; margin: 0 0 12px; }
+
+  /* Focal billing block */
+  .bill { grid-column: 1 / -1; display: grid; grid-template-columns: auto 1fr; gap: 8px 40px; align-items: center; border-left: 4px solid var(--bad); }
+  .bill .amount { font-size: 44px; font-weight: 700; letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .bill .amount small { font-size: 15px; font-weight: 500; color: var(--muted); display: block; letter-spacing: 0; margin-bottom: 6px; }
+  .status { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; }
+  .status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+  .status.bad { color: var(--bad); background: var(--bad-soft); }
+  .status.warn { color: var(--warn); background: var(--warn-soft); }
+  .status.good { color: var(--good); background: var(--good-soft); }
+  .timeline { position: relative; height: 54px; }
+  .timeline .track { position: absolute; left: 0; right: 0; top: 20px; height: 4px; background: var(--line); border-radius: 2px; }
+  .timeline .late { position: absolute; left: 30%; width: 34%; top: 20px; height: 4px; background: var(--bad); border-radius: 2px; }
+  .timeline .mark { position: absolute; top: 14px; transform: translateX(-50%); text-align: center; font-size: 12px; color: var(--muted); white-space: nowrap; }
+  .timeline .mark::before { content: ""; display: block; width: 14px; height: 14px; margin: 0 auto 6px; border-radius: 50%; background: var(--surface); border: 3px solid var(--line); }
+  .timeline .mark.due::before { border-color: var(--bad); }
+  .timeline .mark.today::before { border-color: var(--ink); background: var(--ink); }
+  .timeline .mark strong { color: var(--ink); display: block; font-weight: 600; }
+  .bill-meta { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px 20px; padding-top: 10px; border-top: 1px solid var(--line); margin-top: 6px; font-size: 13px; color: var(--muted); }
+  .bill-meta b { color: var(--ink); font-weight: 600; }
+
+  /* Lists */
+  .rows { list-style: none; margin: 0; padding: 0; }
+  .rows li { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+  .rows li:first-child { border-top: 0; padding-top: 2px; }
+  .rows .label { color: var(--muted); }
+  .rows .value { font-weight: 550; text-align: right; }
+  .alert { display: grid; grid-template-columns: 4px 1fr; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+  .alert:first-of-type { border-top: 0; padding-top: 2px; }
+  .alert i { border-radius: 2px; background: var(--warn); }
+  .alert i.bad { background: var(--bad); }
+  .alert i.info { background: var(--accent); }
+  .alert strong { display: block; font-weight: 600; }
+  .alert span { color: var(--muted); font-size: 13px; }
+
+
+  /* Narrow widths, e.g. when the Knowledge Agent sidebar opens */
+  @media (max-width: 1000px) {
+    .bill { grid-template-columns: 1fr; }
+    .bill .amount { font-size: 38px; }
+  }
+  @media (max-width: 760px) {
+    .caller, .context, .content { padding-left: 16px; padding-right: 16px; }
+    .caller dl { flex-wrap: wrap; gap: 8px 20px; }
+    .rows .value { text-align: left; }
+    .rows li { flex-wrap: wrap; }
+    .content { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="rail" aria-label="Expert tools">
+    <a href="#" aria-current="page"><svg viewBox="0 0 24 24"><path d="M4 5h16v14H4z"/><path d="M4 9h16"/></svg>Account</a>
+    <a href="#"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6"/><path d="m20 20-4.5-4.5"/></svg>Lookup</a>
+    <a href="#"><svg viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M9 11h6M9 15h6"/></svg>Notes</a>
+    <a href="#"><svg viewBox="0 0 24 24"><path d="M12 3v4M12 17v4M3 12h4M17 12h4"/><circle cx="12" cy="12" r="4"/></svg>Support</a>
+  </nav>
+
+  <main class="main">
+    <header class="caller">
+      <h1>Jordan Brooks <span class="verified">Account holder</span></h1>
+      <dl>
+        <div><dt>Mobile</dt><dd>(206) 555-0148</dd></div>
+        <div><dt>Account</dt><dd>000123456</dd></div>
+        <div><dt>Plan</dt><dd>Postpaid: Essentials 2.0</dd></div>
+      </dl>
+    </header>
+
+    <section class="context" aria-label="Call context">
+      <div><span>On call</span><strong class="timer" id="timer">00:00</strong></div>
+      <div><span>Reason from IVR</span><strong>Billing: payment question</strong></div>
+      <div><span>Queue</span><strong>Consumer care</strong></div>
+      <div><span>Language</span><strong>English</strong></div>
+    </section>
+
+    <div class="content">
+      <section class="panel bill" aria-label="Billing">
+        <div class="amount"><small>Current balance</small>$65.00</div>
+        <div>
+          <span class="status bad">Past due, 8 days</span>
+          <div class="timeline" aria-hidden="true">
+            <div class="track"></div>
+            <div class="late"></div>
+            <div class="mark" style="left:8%">Oct 5<strong>Bill issued</strong></div>
+            <div class="mark due" style="left:30%">Nov 5<strong>Due date</strong></div>
+            <div class="mark today" style="left:64%">Nov 13<strong>Today</strong></div>
+          </div>
+        </div>
+        <div class="bill-meta">
+          <span>AutoPay <b>Not enrolled</b></span>
+          <span>Payment arrangement <b>None active</b></span>
+          <span>Last payment <b>None this cycle</b></span>
+        </div>
+      </section>
+
+      <section class="panel" aria-label="Account health">
+        <h2>Account health</h2>
+        <ul class="rows">
+          <li><span>Billing</span><span class="status bad">Past due</span></li>
+          <li><span>Service</span><span class="status good">Active</span></li>
+          <li><span>Network in area</span><span class="status good">No issues</span></li>
+          <li><span>Device</span><span class="status good">No open issues</span></li>
+          <li><span>T-Life app use</span><span class="status warn">Occasional</span></li>
+        </ul>
+      </section>
+
+      <section class="panel" aria-label="Alerts">
+        <h2>Alerts</h2>
+        <div class="alert"><i class="bad"></i><div><strong>Bill past due</strong><span>Due Nov 5. No payment received.</span></div></div>
+        <div class="alert"><i></i><div><strong>Reminder sent</strong><span>Text message, Nov 8</span></div></div>
+        <div class="alert"><i class="info"></i><div><strong>Not on AutoPay</strong><span>No automatic payment method on file</span></div></div>
+      </section>
+
+      <section class="panel" aria-label="Account summary">
+        <h2>Account summary</h2>
+        <ul class="rows">
+          <li><span class="label">Account type</span><span class="value">Individual</span></li>
+          <li><span class="label">Lines</span><span class="value">1</span></li>
+          <li><span class="label">Email</span><span class="value">jordan.brooks@example.com</span></li>
+          <li><span class="label">Address</span><span class="value">123 Demo Lane, Bellingham, WA 98225</span></li>
+        </ul>
+      </section>
+
+      <section class="panel" aria-label="Recent contacts">
+        <h2>Recent contacts</h2>
+        <ul class="rows">
+          <li><span class="label">Nov 8</span><span class="value">Payment reminder, text</span></li>
+          <li><span class="label">Oct 5</span><span class="value">Monthly bill issued</span></li>
+          <li><span class="label">Sep 12</span><span class="value">Account login help, chat</span></li>
+        </ul>
+      </section>
+    </div>
+  </main>
+
+</div>
+
+<script>
+  const start = Date.now();
+  const t = document.getElementById("timer");
+  setInterval(() => {
+    const s = Math.floor((Date.now() - start) / 1000);
+    t.textContent = String(Math.floor(s / 60)).padStart(2, "0") + ":" + String(s % 60).padStart(2, "0");
+  }, 1000);
+</script>
+</body>
+</html>
